@@ -48,6 +48,25 @@ func (a *S3Config) UploadFile(bucket, destination, imgType string, buffer []byte
 	return "https://" + bucket + ".s3." + a.Region + "." + a.Host + destination, err
 }
 
+func (a *S3Config) Remove(bucket, destination string) error {
+	s, err := session.NewSession(&aws.Config{
+		Region:      aws.String(a.Region),
+		Credentials: credentials.NewStaticCredentials(a.Key, a.Secret, ""),
+	})
+	if err != nil {
+		return err
+	}
+	if bucket == "" {
+		bucket = a.Bucket
+	}
+
+	_, err = s3.New(s).DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(destination),
+	})
+	return err
+}
+
 func (a *S3Config) UploadJpeg(m image.Image, destination string) (string, error) {
 	m = resize.Thumbnail(1028, 1028, m, resize.Lanczos3)
 	buf, cnt := new(bytes.Buffer), 0
